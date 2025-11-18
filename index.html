@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Blog</title>
+
+<style>
+    body { font-family: Arial; margin: 0; background: #f4f4f4; }
+    header { background: #007bff; padding: 20px; color: white; text-align:center; }
+    .container { max-width: 900px; margin: 30px auto; background: white; padding: 25px;
+        border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .post { padding: 20px; border-bottom: 1px solid #ddd; }
+    .post h2 { margin: 0; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>My Blog</h1>
+    <p>Welcome! These posts load automatically from GitHub.</p>
+</header>
+
+<div class="container" id="posts">Loading posts…</div>
+
+<script>
+const username = "saisujith1994";   // <--- PUT YOUR USERNAME
+const repo = "blog";           // <--- PUT YOUR REPO NAME
+
+async function loadPosts(){
+    let list = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/posts`);
+    let files = await list.json();
+
+    let container=document.getElementById("posts");
+    container.innerHTML="";
+
+    for (let file of files){
+        let raw = await fetch(file.download_url);
+        let html = await raw.text();
+
+        container.innerHTML += `
+            <div class="post">
+                ${html}
+            </div>
+        `;
+    }
+}
+
+loadPosts();
+</script>
+
+</body>
+</html>
