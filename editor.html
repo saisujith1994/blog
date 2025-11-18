@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog Editor (Private)</title>
+
+<style>
+    body { font-family: Arial; background: #f2f2f2; margin: 0; }
+    header { background: #007bff; padding: 20px; color: white; text-align: center; }
+    .container {
+        max-width: 900px; margin: 30px auto; background: white;
+        padding: 25px; border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #editor {
+        width: 100%; min-height: 220px; padding: 15px;
+        border: 1px solid #aaa; border-radius: 6px;
+        background: white; font-size: 16px;
+    }
+    input, button {
+        padding: 12px; margin: 7px 0; border-radius: 6px;
+        border: 1px solid #999; font-size: 16px;
+    }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .toolbar button { background: #eee; color: #222; border: none; }
+    .post { padding: 20px; background: #fafafa; border-left: 4px solid #007bff; margin: 15px 0; }
+    .delete-btn { background: #d9534f; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Blog Editor (Private)</h1>
+    <p>Create and upload posts to GitHub</p>
+</header>
+
+<div class="container">
+    <h2>Create a New Post</h2>
+
+    <input id="title" placeholder="Post title">
+
+    <div class="toolbar">
+        <button onclick="format('bold')"><b>B</b></button>
+        <button onclick="format('italic')"><i>I</i></button>
+        <button onclick="format('underline')"><u>U</u></button>
+        <button onclick="format('insertUnorderedList')">• List</button>
+        <button onclick="format('insertOrderedList')">1. List</button>
+    </div>
+
+    <div id="editor" contenteditable="true"></div>
+
+    <button onclick="saveLocal()">Save Locally</button>
+    <button onclick="uploadGitHub()">Upload to GitHub</button>
+
+    <h2>Local Posts</h2>
+    <div id="posts"></div>
+</div>
+
+<script>
+function format(cmd){ document.execCommand(cmd,false,null); }
+
+let posts = JSON.parse(localStorage.getItem("posts")||"[]");
+showPosts();
+
+function saveLocal(){
+    const t=document.getElementById("title").value;
+    const c=document.getElementById("editor").innerHTML;
+    if(!t||!c.trim()) return alert("Missing title/content");
+
+    posts.unshift({ id:Date.now(), title:t, content:c, date:new Date().toLocaleString()});
+    localStorage.setItem("posts",JSON.stringify(posts));
+    showPosts();
+}
+
+function showPosts(){
+    let div=document.getElementById("posts");
+    div.innerHTML="";
+    posts.forEach(p=>{
+        div.innerHTML+=`
+            <div class="post">
+                <h3>${p.title}</h3>
+                <small>${p.date}</small>
+                <div>${p.content}</div>
+                <button class="delete-btn" onclick="del(${p.id})">Delete</button>
+            </div>`;
+    });
+}
+
+function del(id){
+    posts=posts.filter(p=>p.id!==id);
+    localStorage.setItem("posts",JSON.stringify(posts));
+    showPosts();
+}
+
+async function uploadGitHub(){
+    let token=prompt("GitHub TOKEN:");
+    let user=prompt("GitHub USERNAME:");
+    let repo=prompt("Repo name (yourrepo):");
+
+    const title=document.getElementById("title").value;
+    const body=document.getElementById("editor").innerHTML;
+
+    if(!title||!body.trim()) return alert("Missing title/content");
+
+    let filename=`posts/${title.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.html`;
+    let html = `<h1>${title}</h1><p><i>${new Date().toLocaleString()}</i></p><hr>${body}`;
+
+    let res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${filename}`, {
+        method: "PUT",
+        headers: { "Authorization":"Bearer "+token },
+        body: JSON.stringify({
+            message:"New post",
+            content:btoa(unescape(encodeURIComponent(html)))
+        })
+    });
+
+    alert(res.ok ? "Uploaded!" : "Upload failed");
+}
+</script>
+</body>
+</html>
