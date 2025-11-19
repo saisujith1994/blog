@@ -69,7 +69,14 @@ function saveLocal(){
     const c=document.getElementById("editor").innerHTML;
     if(!t||!c.trim()) return alert("Missing title/content");
 
-    posts.unshift({ id:Date.now(), title:t, content:c, date:new Date().toLocaleString()});
+    posts.unshift({ 
+        id:Date.now(), 
+        title:t, 
+        content:c, 
+        date:new Date().toLocaleString(),
+        githubFile: null // stored after upload
+    });
+
     localStorage.setItem("posts",JSON.stringify(posts));
     showPosts();
 }
@@ -83,7 +90,11 @@ function showPosts(){
                 <h3>${p.title}</h3>
                 <small>${p.date}</small>
                 <div>${p.content}</div>
-                <button class="delete-btn" onclick="del(${p.id})">Delete</button>
+                <button class="delete-btn" onclick="del(${p.id})">Delete Locally</button>
+
+                ${p.githubFile ? `
+                    <button onclick="deleteGitHub('${p.githubFile}')">Delete on GitHub</button>
+                ` : ""}
             </div>`;
     });
 }
@@ -94,30 +105,111 @@ function del(id){
     showPosts();
 }
 
-async function uploadGitHub(){
-    let token=prompt("GitHub TOKEN:");
-    let user=prompt("GitHub USERNAME:");
-    let repo=prompt("Repo name (yourrepo):");
+// Convert UTF8 → Base64
+function toBase64(str){
+    return btoa(String.fromCharCode(...new TextEncoder().encode(str)));
+}
 
-    const title=document.getElementById("title").value;
-    const body=document.getElementById("editor").innerHTML;
+async function uploadGitHub() {
+    let token = prompt("GitHub TOKEN:");
+    let user = prompt("GitHub USERNAME:");
+    let repo = prompt("Repo name:");
 
-    if(!title||!body.trim()) return alert("Missing title/content");
+    const title = document.getElementById("title").value;
+    const body = document.getElementById("editor").innerHTML;
 
-    let filename=`posts/${title.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.html`;
-    let html = `<h1>${title}</h1><p><i>${new Date().toLocaleString()}</i></p><hr>${body}`;
+    if (!title || !body.trim()) {
+        alert("Missing title/content");
+        return;
+    }
 
+    const filename = `posts/${title.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.html`;
+    const html = `<h1>${title}</h1><p><i>${new Date().toLocaleString()}</i></p><hr>${body}`;
+
+    const encoded = toBase64(html);
+
+    // Upload to GitHub
     let res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${filename}`, {
         method: "PUT",
-        headers: { "Authorization":"Bearer "+token },
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "X-GitHub-Api-Version": "2022-11-28"
+        },
         body: JSON.stringify({
-            message:"New post",
-            content:btoa(unescape(encodeURIComponent(html)))
+            message: "New post",
+            content: encoded
         })
     });
 
-    alert(res.ok ? "Uploaded!" : "Upload failed");
+    const result = await res.json();
+
+    if (res.ok) {
+        alert("Uploaded ✔");
+
+        // Save GitHub path to the local post
+        posts[0].githubFile = filename;
+        localStorage.setItem("posts", JSON.stringify(posts));
+        showPosts();
+
+        // CLEAR EDITOR + TITLE
+        document.getElementById("title").value = "";
+        document.getElementById("editor").innerHTML = "";
+    } else {
+        alert("Upload failed ❌\n" + JSON.stringify(result, null, 2));
+    }
+}
+
+// 🔥 NEW — Delete GitHub post
+async function deleteGitHub(path) {
+    let token = prompt("GitHub TOKEN:");
+    let user = prompt("GitHub USERNAME:");
+    let repo = prompt("Repo name:");
+
+    // Get SHA of existing file
+    let fileInfo = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${path}`, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
+
+    if (!fileInfo.ok) {
+        alert("Failed to fetch file info.");
+        return;
+    }
+
+    let info = await fileInfo.json();
+
+    let res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${path}`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "X-GitHub-Api-Version": "2022-11-28"
+        },
+        body: JSON.stringify({
+            message: "Delete post",
+            sha: info.sha
+        })
+    });
+
+    if (res.ok) {
+        alert("Deleted on GitHub ✔");
+
+        // remove githubFile from local post
+        posts = posts.map(p => {
+            if (p.githubFile === path) p.githubFile = null;
+            return p;
+        });
+
+        localStorage.setItem("posts", JSON.stringify(posts));
+        showPosts();
+    } else {
+        const err = await res.json();
+        alert("Delete failed ❌\n" + JSON.stringify(err, null, 2));
+    }
 }
 </script>
+
 </body>
 </html>
