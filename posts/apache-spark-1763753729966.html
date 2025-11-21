@@ -1,0 +1,44 @@
+<h1>Apache Spark</h1><p><i>11/21/2025, 2:35:29 PM</i></p><hr>Apache Spark—a unified computing engine and set of libraries
+for big data<div><br></div><div>structured streaming&nbsp; &nbsp; &nbsp; Advanced analytics&nbsp; &nbsp; ecosystem &amp; library</div><div><br></div><div>dataframes&nbsp; &nbsp; &nbsp; sql&nbsp; &nbsp; &nbsp; datasets</div><div><br></div><div>rdd&nbsp; &nbsp; &nbsp;distributed variables.<br><div><br></div><div>Spark
+provides consistent, composable APIs that you can use to build an application out of smaller
+pieces or out of existing libraries.</div><div><br></div><div>For example, if you load data using a SQLquery and then evaluate a
+machine learning model over it using Spark’s MLlibrary, the engine can combine these steps into
+one scan over the data.&nbsp;</div><div><br></div><div>“structured APIs” (DataFrames, Datasets, and SQL) that
+were finalized in Spark 2.0 to enable more powerful optimization under user applications.</div></div><div><br></div><div>The key motivation here is that most data already resides in a mix of
+storage systems. Data is expensive to move so Spark focuses on performing computations over the
+data, no matter where it resides.&nbsp;</div><div><br></div><div>Hadoop included both a storage system (the Hadoop file system, designed for
+low-cost storage over clusters of commodity servers) and a computing system (MapReduce),
+which were closely integrated together. However, this choice makes it difficult to run one of the
+systems without the other. More important, this choice also makes it a challenge to write
+applications that access data stored anywhere else. Although Spark runs well on Hadoop storage,
+today it is also used broadly in environments for which the Hadoop architecture does not make
+sense, such as the public cloud (where storage can be purchased separately from computing) or
+streaming applications.</div><div><br></div><div>Spark includes libraries for
+SQL and structured data (Spark SQL), machine learning (MLlib), stream processing (Spark
+Streaming and the newer Structured Streaming), and graph analytics (GraphX). Beyond these
+libraries, there are hundreds of open source external libraries ranging from connectors for various
+storage systems to machine learning algorithms.&nbsp;</div><div><br></div><div>Spark itself is written in Scala, and runs on
+the Java Virtual Machine (JVM), so therefore to run Spark either on your laptop or a cluster, all you
+need is an installation of Java. If you want to use the Python API, you will also need a Python
+interpreter (version 2.7 or later).</div><div><br></div><div>A
+cluster, or group, of computers, pools the resources of many machines together, giving us the ability
+to use all the cumulative resources as if they were a single computer. Now, a group of machines alone
+is not powerful, you need a framework to coordinate work across them. Spark does just that,
+managing and coordinating the execution of tasks on data across a cluster of computers.
+The cluster of machines that Spark will use to execute tasks is managed by a cluster manager like
+Spark’s standalone cluster manager, YARN, or Mesos. We then submit Spark Applications to these
+cluster managers, which will grant resources to our application so that we can complete our work.&nbsp;</div><div><br></div><div>Spark Applications consist of a driver process and a set of executor processes. The driver process
+runs your main() function, sits on a node in the cluster, and is responsible for three things:
+maintaining information about the Spark Application; responding to a user’s program or input; and
+analyzing, distributing, and scheduling work across the executors (discussed momentarily). The
+driver process is absolutely essential—it’s the heart of a Spark Application and maintains all
+relevant information during the lifetime of the application.</div><div><br></div><div>Here are the key points to understand about Spark Applications at this point:
+Spark employs a cluster manager that keeps track of the resources available.
+The driver process is responsible for executing the driver program’s commands across the
+executors to complete a given task.</div><div><br></div><div>There is a
+SparkSession object available to the user, which is the entrance point to running Spark code. When
+using Spark from Python or R, you don’t write explicit JVM instructions; instead, you write Python
+and R code that Spark translates into code that it then can run on the executor JVMs.</div><div><br></div><div>control your Spark Application through a driver
+process called the SparkSession. The SparkSession instance is the way Spark executes user-defined
+manipulations across the cluster. There is a one-to-one correspondence between a SparkSession and
+a Spark Application.</div><div><br></div><div><br></div>
