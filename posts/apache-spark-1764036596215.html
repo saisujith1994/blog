@@ -1,0 +1,68 @@
+<h1>Apache Spark</h1><p><i>11/24/2025, 9:09:56 PM</i></p><hr><b>Structured APIs—DataFrames,
+SQL, and Datasets</b><div><b><br></b></div><div>The Structured APIs are a tool
+for manipulating all sorts of data, from unstructured log files to semi-structured CSV files and highly
+structured Parquet files.&nbsp;</div><div><br></div><div>These APIs refer to three core types of distributed collection APIs:&nbsp;</div><div><ol><li>Datasets&nbsp;</li><li>DataFrames&nbsp;</li><li>SQLtables and views.</li></ol><b></b></div><div><br></div><div>The Structured APIs are the fundamental abstraction that you will use to write the majority of your
+data flows</div><div><br></div><div>Before proceeding, let’s review the fundamental concepts and definitions that we covered in Part I.&nbsp;</div><div><ol><li>Spark is a distributed
+programming model in which the user specifies transformations.&nbsp;</li><li>Multiple transformations build up a directed acyclic graph
+of instructions.&nbsp;</li><li>An action begins the process of executing that graph of instructions, as a single job, by breaking it down into
+stages and tasks to execute across the cluster.&nbsp;</li><li>The logical structures that we manipulate with transformations and actions
+are DataFrames and Datasets.&nbsp;</li><li>To create a new DataFrame or Dataset, you call a transformation.&nbsp;</li><li>To start computation or
+convert to native language types, you call an action.&nbsp;</li></ol><b></b></div><div><br></div><div><br></div><div><b>DataFrames and Datasets</b></div><div>DataFrames and Datasets are (distributed) table-like collections with well-defined rows and
+columns.<b></b></div><div><br></div><div><b>Schemas</b>&nbsp;</div><div>A schema defines the column names and types of a DataFrame. You can define schemas <b>manually or
+read a schema</b> from a data source (often called schema on read). Schemas consist of <b>types</b>, meaning
+that you need a way of specifying what lies where.</div><div><br></div><div>Spark is effectively a programming language of its own. Internally, Spark uses an engine called
+<b>Catalyst </b>that maintains its own type information through the planning and processing of work.</div><div><br></div><div>Spark types map directly to the different language APIs that Spark maintains and there exists a lookup
+table for each of these in Scala, Java, Python, SQL, and R.</div><div><br></div><div>Within the Structured APIs, there are two more APIs, the “untyped” DataFrames and the
+“typed” Datasets. To say that DataFrames are untyped is slightly inaccurate; they have types, but
+Spark maintains them completely and only checks whether those types line up to those specified in the
+schema at <b>runtime</b>.&nbsp;</div><div>Datasets, on the other hand, check whether types conform to the specification at
+<b>compile time</b>. Datasets are only available to <b>Java Virtual Machine (JVM)–based languages (Scala
+and Java)</b> and we specify types with <b>case classes or Java beans.</b></div><div><b><br></b></div><div>To Spark (in Scala), <b>DataFrames are
+simply Datasets of Type Row.</b> The “Row” type is Spark’s internal representation of its optimized in memory format for computation.&nbsp;</div><div><br></div><div>This format makes for highly specialized and efficient computation
+because rather than using JVM types, which can cause <b>high garbage-collection and object
+instantiation costs</b>, Spark can operate on its own internal format without incurring any of those costs.&nbsp;</div><div><br></div><div>To Spark <b>(in Python or R)</b>, there is no such thing as a <b>Dataset</b>: everything is a <b>DataFrame </b>and
+therefore we always operate on that optimized format.&nbsp;<b></b></div><div><br></div><div><b>Columns&nbsp;</b></div><div>Columns represent a simple type like an integer or string, a complex type like an array or map, or a
+null value. Spark tracks all of this type information for you and offers a variety of ways, with which
+you can transform columns.</div><div><br></div><div><b>Rows&nbsp;</b></div><div>A row is nothing more than a record of data. Each record in a DataFrame must be of type Row, as we
+can see when we collect the following DataFrames. We can create these rows manually from SQL,
+from Resilient Distributed Datasets (RDDs), from data sources, or manually from scratch.</div><div><br></div><div>Data type Value type in Python
+API to access or create a
+data type&nbsp;</div><div><b>ByteType
+</b>int or long. Note: Numbers will be converted to 1-byte signed integer
+numbers at runtime. Ensure that numbers are within the range of –128 to
+127.
+ByteType()&nbsp;</div><div><br></div><div><b>ShortType
+</b>int or long. Note: Numbers will be converted to 2-byte signed integer
+numbers at runtime. Ensure that numbers are within the range of –32768 to
+32767.
+ShortType()&nbsp;</div><div><br></div><div><b>IntegerType
+</b>int or long. Note: Python has a lenient definition of “integer.” Numbers that
+are too large will be rejected by Spark SQL if you use the IntegerType(). It’s
+best practice to use LongType.
+IntegerType()&nbsp;</div><div><br></div><div><b>LongType
+</b>long. Note: Numbers will be converted to 8-byte signed integer numbers at
+runtime. Ensure that numbers are within the range of –
+9223372036854775808 to 9223372036854775807. Otherwise, convert data to
+decimal.Decimal and use&nbsp;</div><div><br></div><div><b>DecimalType</b>.
+LongType()&nbsp;</div><div><b><br></b></div><div><b>FloatType
+</b>float. Note: Numbers will be converted to 4-byte single-precision floatingpoint numbers at runtime.
+FloatType()&nbsp;</div><div><b><br></b></div><div><b>DoubleType </b>float DoubleType()&nbsp;</div><div><b><br></b></div><div><b>DecimalType </b>decimal.Decimal DecimalType()
+StringType string StringType()
+BinaryType bytearray BinaryType()</div><div><br></div><div><b>BooleanType</b> bool BooleanType()&nbsp;</div><div><br></div><div><b>TimestampType</b> datetime.datetime TimestampType()&nbsp;</div><div><br></div><div><b>DateType</b> datetime.date DateType()&nbsp;</div><div><b><br></b></div><div><b>ArrayType</b> list, tuple, or array
+ArrayType(elementType,
+[containsNull]). Note: The
+default value of containsNull is
+True.&nbsp;</div><div><b><br></b></div><div><b>MapType</b> dict
+MapType(keyType, valueType,
+[valueContainsNull]). Note: The
+default value of
+valueContainsNull is True.&nbsp;</div><div><b><br></b></div><div><b>StructType</b> list or tuple
+StructType(fields). Note: fields
+is a list of StructFields. Also,
+fields with the same name are
+not allowed.&nbsp;</div><div><b><br></b></div><div><b>StructField
+</b>The value type in Python of the data type of this field (for example, Int for a
+StructField with the data type IntegerType)
+StructField(name, dataType,
+[nullable]) Note: The default
+value of nullable is True</div>
